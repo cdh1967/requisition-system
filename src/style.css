@@ -1,0 +1,294 @@
+/* =========================================
+   BASE STYLES & VARIABLES
+   ========================================= */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+body {
+  background: #f4f6f8;
+  color: #333;
+  min-height: 100vh;
+}
+
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* =========================================
+   LOGIN PAGE (Responsive sa Android ug PC)
+   ========================================= */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #e2e8f0; 
+  padding: 1rem;
+}
+
+.login-box {
+  background: white;
+  padding: 2.5rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px; /* Dili mo-sobra ka-lapad sa desktop */
+  text-align: center;
+}
+
+.login-logo {
+  width: 110px;
+  height: 110px;
+  object-fit: contain;
+  margin-bottom: 1rem;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.login-box h2 {
+  color: #1e3a8a;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.login-form input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.login-form input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* LOG IN BUTTON */
+.primary-btn {
+  background: #2563eb;
+  color: white;
+  padding: 0.8rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.primary-btn:hover {
+  background: #1d4ed8;
+}
+
+.error-text {
+  color: #dc2626;
+  font-size: 0.9rem;
+  text-align: left;
+  margin: 0;
+}
+
+/* =========================================
+   HEADER & NAVIGATION (Main App)
+   ========================================= */
+header {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+  color: white;
+  padding: 1rem 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.hospital-logo {
+  width: 55px;
+  height: 55px;
+  object-fit: contain;
+  background: white;
+  padding: 2px;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.brand h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+  margin: 0;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+}
+
+.logout-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.logout-btn:hover {
+  background: #dc2626;
+}
+
+nav {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #e0e7ff;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.tab-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.tab-btn.active {
+  background: white;
+  color: #1e3a8a;
+  font-weight: 700;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* =========================================
+   MAIN CONTENT
+   ========================================= */
+main {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  flex: 1;
+}
+
+.tab-content {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* =========================================
+   MOBILE RESPONSIVE (Para sa Android ug Tablet)
+   ========================================= */
+@media (max-width: 768px) {
+  header {
+    padding: 1rem;
+  }
+
+  .header-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hospital-logo {
+    width: 40px;
+    height: 40px;
+  }
+
+  .brand h1 {
+    font-size: 1.1rem;
+  }
+
+  .user-info {
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+  }
+
+  nav {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    width: 100%;
+  }
+
+  .tab-btn {
+    width: 100%;
+    text-align: center;
+    font-size: 0.85rem;
+    padding: 0.5rem;
+  }
+
+  main {
+    padding: 1rem;
+  }
+  
+  .tab-content {
+    padding: 1rem;
+  }
+
+  /* Mobile adjustments sa Login (Gagmay ang logo ug box) */
+  .login-box {
+    padding: 1.5rem;
+  }
+  
+  .login-logo {
+    width: 80px;
+    height: 80px;
+  }
+}
+.forgot-btn {
+  background: transparent;
+  color: #3b82f6;
+  border: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-top: 0.5rem;
+}
+
+.forgot-btn:hover {
+  color: #1e3a8a;
+}

@@ -1,28 +1,23 @@
 {
-  "name": "requisition-system",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "inventory",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "preview": "vite preview"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "body-parser": "^1.20.3",
-    "cors": "^2.8.6",
-    "dotenv": "^18.0.10",
-    "express": "^5.3.0",
-    "mysql2": "^3.24.6",
-    "uuid": "^14.0.3",
-    "vue": "^3.5.45"
+    "vue": "^3.5.44"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^6.0.11"
-  }
+    "@vitejs/plugin-vue": "^6.0.10",
+    "vite": "^8.3.6"
+  },
+  "description": "This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.",
+  "main": "vite.config.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
