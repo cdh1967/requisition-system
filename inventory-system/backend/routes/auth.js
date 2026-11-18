@@ -1,74 +1,31 @@
 import express from 'express'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import { pool, generateId } from '../db.js'
-import { authenticate } from '../middleware/auth.js'
-
+import { pool, generateId } from '../db.js'          // ✅ correct if db.js at root
+import { authenticate } from '../middleware/auth.js' // ✅ correct
 const router = express.Router()
 
-// LOGIN
-router.post('/login', async (req, res) => {
-  const { username, password } = req.body
-  const [rows] = await pool.query('SELECT * FROM users WHERE username = ?', [username])
-  if (!rows.length) return res.json({ ok: false, message: 'Invalid username or password' })
-  const user = rows[0]
-  if (user.status === 'Inactive') return res.json({ ok: false, message: 'Account is deactivated. Contact Admin.' })
-  const match = await bcrypt.compare(password, user.password)
-  if (!match) return res.json({ ok: false, message: 'Invalid username or password' })
+// GET /login — return camelCase
+const { password: _, emp_id, ...rest } = user
+const safeUser = { ...rest, empId: emp_id }
+res.json({ ok: true, token, user: safeUser })
 
-  await pool.query(
-    'INSERT INTO trail_logs (id, user, action, details) VALUES (?,?,?,?)',
-    [generateId(), user.username, 'LOGIN_SUCCESS', `User ${user.username} logged in.`]
-  )
-
-  const token = jwt.sign(
-    { id: user.id, username: user.username, role: user.role, name: user.name },
-    process.env.JWT_SECRET,
-    { expiresIn: '12h' }
-  )
-  const { password: _, ...safeUser } = user
-  res.json({ ok: true, token, user: safeUser })
-})
-
-// GET USERS
+// GET /users — return camelCase
 router.get('/users', authenticate, async (req, res) => {
   const [rows] = await pool.query('SELECT id, emp_id, name, email, department, username, role, status FROM users')
-  res.json(rows)
+  res.json(rows.map(u => ({
+    id: u.id, empId: u.emp_id, name: u.name, email: u.email,
+    department: u.department, username: u.username, role: u.role, status: u.status
+  })))
 })
 
-// CREATE USER
-router.post('/users', authenticate, async (req, res) => {
-  const { empId, name, email, department, username, password, role, status } = req.body
-  const [exists] = await pool.query('SELECT id FROM users WHERE username = ?', [username])
-  if (exists.length) return res.json({ ok: false, message: 'Username already exists' })
-  const hash = await bcrypt.hash(password, 10)
-  const id = generateId()
-  await pool.query(
-    'INSERT INTO users (id, emp_id, name, email, department, username, password, role, status) VALUES (?,?,?,?,?,?,?,?,?)',
-    [id, empId || 'N/A', name, email, department || 'N/A', username, hash, role || 'Staff', status || 'Active']
-  )
-  res.json({ ok: true, id })
+// GET /resets — return camelCase `date`
+router.get('/resets', authenticate, async (req, res) => {
+  const [rows] = await pool.query('SELECT * FROM password_resets')
+  res.json(rows.map(r => ({
+    id: r.id, username: r.username, name: r.name, date: r.created_at
+  })))
 })
-
-// UPDATE USER
-router.put('/users/:id', authenticate, async (req, res) => {
-  const { id } = req.params
-  const { empId, name, email, department, username, password, role, status } = req.body
-  let hash = null
-  if (password) hash = await bcrypt.hash(password, 10)
-
-  const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [id])
-  if (!rows.length) return res.json({ ok: false, message: 'User not found' })
-
-  await pool.query(
-    `UPDATE users SET emp_id=?, name=?, email=?, department=?, username=?, role=?, status=? ${hash ? ', password=?' : ''} WHERE id=?`,
-    hash
-      ? [empId, name, email, department, username, role, status, hash, id]
-      : [empId, name, email, department, username, role, status, id]
-  )
-  res.json({ ok: true })
-})
-
 // DELETE USER
 router.delete('/users/:id', authenticate, async (req, res) => {
   const [rows] = await pool.query('SELECT username FROM users WHERE id = ?', [req.params.id])

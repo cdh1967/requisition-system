@@ -1,17 +1,13 @@
 <script setup>
 import { ref, onMounted, inject, computed } from 'vue'
-import { addItem, deleteItem, restockItem, updateItem, getInventory, refreshInventory } from '../modules/inventory.js'
+import { deleteItem, updateItem, getInventory, refreshInventory } from '../modules/inventory.js'
 
 const showToast = inject('showToast')
 const items = ref([])
-
-// --- STATE PARA SA TABLE ---
 const searchQuery = ref('')
 const activeFilter = ref('All active')
 const limit = ref(10)
 const currentPage = ref(1)
-
-// BAG-ONG STATE PARA SA CATEGORY TABS
 const activeCategoryTab = ref('Medical Supplies')
 const categoryTabs = ['Medical Supplies', 'Office Supplies', 'Janitorial Supplies']
 
@@ -23,38 +19,21 @@ const filterTabs = [
   { label: 'Expiry alerts', color: '#f97316' }
 ]
 
-function loadItems() {
-  refreshInventory()
+async function loadItems() {
+  await refreshInventory()
   items.value = [...getInventory()]
 }
 
-onMounted(loadItems)
-
-// --- FILTER & PAGINATION ---
 const filteredItems = computed(() => {
-  // 1. Filter base sa Active Category Tab
   let result = items.value.filter(item => item.category === activeCategoryTab.value)
-
-  // 2. Search Filter
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase()
-    result = result.filter(item => 
-      item.name.toLowerCase().includes(q) || 
-      item.category.toLowerCase().includes(q)
-    )
+    result = result.filter(item => item.name.toLowerCase().includes(q) || item.category.toLowerCase().includes(q))
   }
-
-  // 3. Quick Filter Tabs
-  if (activeFilter.value === 'Available') {
-    result = result.filter(item => item.qty > 20)
-  } else if (activeFilter.value === 'Low stock') {
-    result = result.filter(item => item.qty > 0 && item.qty <= 20)
-  } else if (activeFilter.value === 'Out of stock') {
-    result = result.filter(item => item.qty === 0)
-  } else if (activeFilter.value === 'Expiry alerts') {
-    result = [] 
-  }
-
+  if (activeFilter.value === 'Available') result = result.filter(item => item.qty > 20)
+  else if (activeFilter.value === 'Low stock') result = result.filter(item => item.qty > 0 && item.qty <= 20)
+  else if (activeFilter.value === 'Out of stock') result = result.filter(item => item.qty === 0)
+  else if (activeFilter.value === 'Expiry alerts') result = []
   return result
 })
 
@@ -63,70 +42,53 @@ const paginatedItems = computed(() => {
   const start = (currentPage.value - 1) * limit.value
   return filteredItems.value.slice(start, start + limit.value)
 })
-
 function changePage(page) {
   if (page >= 1 && page <= totalPages.value) currentPage.value = page
 }
 
-// --- STATE PARA SA DETAILS MODAL ---
+// --- MODAL STATE ---
 const showDetailsModal = ref(false)
 const editingItem = ref({
-  id: '',
-  name: '',
-  category: '',
-  qty: 0,
-  unit: '',
-  unitCost: 0,
-  beginningBalance: 0,
-  adjustStock: 0
+  id: '', name: '', category: '', qty: 0, unit: '', unitCost: 0,
+  beginningBalance: 0, adjustStock: 0
 })
 
 function openDetailsModal(item) {
   editingItem.value = {
-    id: item.id,
-    name: item.name,
-    category: item.category,
-    qty: item.qty,
-    unit: item.unit,
-    unitCost: item.unitCost || 0,
-    beginningBalance: item.qty,
-    adjustStock: 0
+    id: item.id, name: item.name, category: item.category, qty: item.qty,
+    unit: item.unit, unitCost: item.unitCost || 0,
+    beginningBalance: item.qty, adjustStock: 0
   }
   showDetailsModal.value = true
 }
 
-function saveDetails() {
+async function saveDetails() {
+  // FIX: gamit ang editingItem.value aron naa sa scope ang id, beginningBalance, adjustStock, unitCost
   const { id, beginningBalance, adjustStock, unitCost } = editingItem.value
-  
   if (isNaN(unitCost) || unitCost < 0) {
     showToast('Please enter a valid Unit Cost', true)
     return
   }
-
   const newQty = Number(beginningBalance) + Number(adjustStock)
-
-  const success = updateItem(id, { 
-    ...editingItem.value, 
-    qty: newQty 
-  })
-
+  const success = await updateItem(id, { ...editingItem.value, qty: newQty })
   if (success) {
     showToast('Item details and stock updated!')
     showDetailsModal.value = false
-    loadItems()
+    await loadItems()
   } else {
     showToast('Failed to update item', true)
   }
 }
 
-function onDelete(id) {
+async function onDelete(id) {
   if (!confirm('Delete this item?')) return
-  deleteItem(id)
-  loadItems()
+  await deleteItem(id)
+  await loadItems()
   showToast('Item deleted')
 }
-</script>
 
+onMounted(loadItems)
+</script>
 <template>
   <section class="tab-content active" style="padding: 1rem;">
     

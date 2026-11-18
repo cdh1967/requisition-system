@@ -6,59 +6,50 @@ import HistoryTab from './components/HistoryTab.vue'
 import ApprovalTab from './components/ApprovalTab.vue'
 import UsersTab from './components/UsersTab.vue'
 import InventoryReport from './components/InventoryReport.vue'
-import TrailLogTab from './components/TrailLogTab.vue' // <-- Gi-import kini
-import { login, initUsers, requestPasswordReset } from './modules/auth.js'
+import TrailLogTab from './components/TrailLogTab.vue'
+import { login, initUsers, requestPasswordReset, getSession, clearSession } from './modules/auth.js'
 
 const isAuthenticated = ref(false)
 const currentUser = ref(null)
 const loginForm = ref({ username: '', password: '' })
 const loginError = ref('')
+const activeTab = ref('inventory')
 
-onMounted(() => {
-  initUsers()
-  try {
-    const savedSession = localStorage.getItem('rsi_session')
-    if (savedSession) {
-      const parsedUser = JSON.parse(savedSession)
-      if (parsedUser && parsedUser.username) {
-        currentUser.value = parsedUser
-        isAuthenticated.value = true
-      }
-    }
-  } catch (e) {
-    localStorage.removeItem('rsi_session')
-    isAuthenticated.value = false
+onMounted(async () => {
+  await initUsers()
+  // Use server-side session instead of localStorage
+  const session = await getSession()
+  if (session && session.username) {
+    currentUser.value = session
+    isAuthenticated.value = true
   }
 })
 
-function handleLogin() {
+async function handleLogin() {
   loginError.value = ''
-  const result = login(loginForm.value.username, loginForm.value.password)
+  const result = await login(loginForm.value.username, loginForm.value.password)
   if (result.ok) {
     currentUser.value = result.user
     isAuthenticated.value = true
-    localStorage.setItem('rsi_session', JSON.stringify(result.user))
     loginForm.value = { username: '', password: '' }
-    activeTab.value = 'inventory'
+    activeTab.value = result.user.role === 'Staff' ? 'requisition' : 'inventory'
   } else {
     loginError.value = result.message
   }
 }
 
-function handleForgotPassword() {
+async function handleForgotPassword() {
   const username = prompt("Enter your username to request a password reset:")
   if (!username) return
-  const result = requestPasswordReset(username)
-  alert(result.message)
+  const result = await requestPasswordReset(username)
+  alert(result.message || 'Submitted')
 }
 
-function handleLogout() {
+async function handleLogout() {
+  await clearSession()  // clear server session
   isAuthenticated.value = false
   currentUser.value = null
-  localStorage.removeItem('rsi_session')
 }
-
-const activeTab = ref('inventory')
 
 const tabs = computed(() => {
   const role = currentUser.value?.role
@@ -69,7 +60,7 @@ const tabs = computed(() => {
       { id: 'requisition', label: 'Requisition Slip' },
       { id: 'approvals', label: 'Approvals' },
       { id: 'history', label: 'History' },
-      { id: 'trail', label: 'Audit Trail' }, // <-- Gi-apil ang Audit Trail
+      { id: 'trail', label: 'Audit Trail' },
       { id: 'users', label: 'Users' }
     ]
   }
@@ -90,13 +81,10 @@ const tabs = computed(() => {
 
 watch(isAuthenticated, (newVal) => {
   if (newVal) {
-    if (currentUser.value?.role === 'Staff') {
-      activeTab.value = 'requisition'
-    } else if (currentUser.value?.role === 'Head Office' || currentUser.value?.role === 'Supply Release') {
-      activeTab.value = 'approvals'
-    } else {
-      activeTab.value = 'inventory'
-    }
+    const role = currentUser.value?.role
+    if (role === 'Staff') activeTab.value = 'requisition'
+    else if (role === 'Head Office' || role === 'Supply Release') activeTab.value = 'approvals'
+    else activeTab.value = 'inventory'
   }
 })
 
@@ -116,7 +104,7 @@ provide('showToast', showToast)
   <!-- LOGIN SCREEN -->
   <div v-if="!isAuthenticated" class="login-container">
     <div class="login-box">
-      <img src="/logo.png" alt="CDH Logo" class="login-logo" />
+      <img src="/logo.svg" alt="CDH Logo" class="login-logo" />
       <h2>🔐 Login</h2>
       
       <form @submit.prevent="handleLogin" class="login-form">
@@ -138,7 +126,7 @@ provide('showToast', showToast)
     <header>
       <div class="header-top">
         <div class="brand">
-          <img src="/logo.png" alt="CDH Logo" class="hospital-logo" />
+          <img src="/logo.svg" alt="CDH Logo" class="hospital-logo" />
           <h1>Requisition Slip Inventory</h1>
         </div>
         <div class="user-info">
@@ -168,7 +156,7 @@ provide('showToast', showToast)
         <RequisitionTab v-show="activeTab === 'requisition'" />
         <ApprovalTab v-show="activeTab === 'approvals'" :userRole="currentUser?.role" />
         <HistoryTab v-show="activeTab === 'history'" />
-        <TrailLogTab v-show="activeTab === 'trail'" /> <!-- <-- Gi-apil dinhi -->
+        <TrailLogTab v-show="activeTab === 'trail'" />
         <UsersTab v-show="activeTab === 'users'" />
       </template>
       <template v-else-if="currentUser?.role === 'Head Office' || currentUser?.role === 'Supply Release'">

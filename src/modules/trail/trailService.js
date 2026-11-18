@@ -1,33 +1,29 @@
-// Trail Log Service
-const PREFIX = import.meta.env.VITE_STORAGE_PREFIX || 'rsi_';
-const KEY_TRAIL = `${PREFIX}trail_logs`;
+// modules/trail/trailService.js
+const API = '/api/trail'
+
+let cache = []
+
+export async function refreshTrailLogs() {
+  const res = await fetch(API, { credentials: 'include' })
+  if (res.ok) cache = await res.json()
+  return cache
+}
 
 export function getTrailLogs() {
-  return JSON.parse(localStorage.getItem(KEY_TRAIL)) || [];
+  return cache
 }
 
-export function addTrailLog(action, details, user = 'System') {
-  const logs = getTrailLogs();
-  
-  const newLog = {
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-    date: new Date().toISOString(),
-    user: user,
-    action: action, // e.g., 'LOGIN', 'APPROVE', 'DEDUCT', 'ADD_ITEM'
-    details: details // e.g., 'User superadmin logged in', 'Approved slip RS-123456'
-  };
-
-  logs.unshift(newLog); // Ibutang sa pinaka-una
-  
-  // Limitahan nato sa 1000 logs aron dili mo-bug-at ang localStorage
-  if (logs.length > 1000) {
-    logs.pop();
-  }
-
-  localStorage.setItem(KEY_TRAIL, JSON.stringify(logs));
-  return newLog;
+export async function logAction(user, action, details) {
+  await fetch(API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ user, action, details })
+  })
+  await refreshTrailLogs()
 }
 
-export function clearTrailLogs() {
-  localStorage.removeItem(KEY_TRAIL);
+export async function clearTrailLogs() {
+  await fetch(API, { method: 'DELETE', credentials: 'include' })
+  cache = []
 }

@@ -1,17 +1,24 @@
+// server.js
 import express from 'express'
-import { pool, generateId } from '../db.js'
-import { authenticate } from '../middleware/auth.js'
+import cors from 'cors'
+import dotenv from 'dotenv'
+dotenv.config()
 
-const router = express.Router()
+import authRoutes from './routes/auth.js'
+import inventoryRoutes from './routes/inventory.js'   // ⬅️ nag-expect og inventory.js
+import requisitionRoutes from './routes/requisition.js' // ⬅️ nag-expect og requisition.jsimport trailRoutes from './routes/trail.js'
 
-router.get('/', authenticate, async (req, res) => {
-  const [rows] = await pool.query('SELECT * FROM trail_logs ORDER BY created_at DESC LIMIT 1000')
-  res.json(rows)
-})
+const app = express()
+app.use(cors())
+app.use(express.json())
 
-router.delete('/', authenticate, async (req, res) => {
-  await pool.query('DELETE FROM trail_logs')
-  res.json({ ok: true })
-})
+app.use('/api/auth', authRoutes)
+app.use('/api/inventory', inventoryRoutes)
+app.use('/api/requisitions', requisitionRoutes)
+app.use('/api/trail', trailRoutes)
 
-export default router
+// health check
+app.get('/api/health', (_, res) => res.json({ ok: true }))
+
+const PORT = process.env.PORT || 4000
+app.listen(PORT, () => console.log(`✅ Backend running on http://localhost:${PORT}`))
